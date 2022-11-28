@@ -265,7 +265,6 @@ func (h *H) SetServiceAccount(ctx context.Context, sa string) *H {
 	h.restConfig.Impersonate = rest.ImpersonationConfig{
 		UserName: h.ServiceAccount,
 	}
-	log.Printf("ServiceAccount is now set to `%v`", h.ServiceAccount)
 
 	return h
 }
@@ -466,4 +465,8 @@ func (h *H) WithToken(token string) *H {
 	return &H{
 		restConfig: config,
 	}
+}
+
+func (h *H) GetConfig() *rest.Config {
+	return h.restConfig
 }
