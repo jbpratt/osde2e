@@ -38,7 +38,6 @@ import (
 	"github.com/openshift/osde2e/pkg/db"
 
 	"github.com/onsi/ginkgo/v2/reporters"
-	"github.com/openshift/osde2e/pkg/common/aws"
 	"github.com/openshift/osde2e/pkg/common/cluster"
 	clusterutil "github.com/openshift/osde2e/pkg/common/cluster"
 	"github.com/openshift/osde2e/pkg/common/clusterproperties"
@@ -560,20 +559,9 @@ func runGinkgoTests() (int, error) {
 		if newMetrics == nil {
 			return Failure, fmt.Errorf("error getting new metrics provider")
 		}
-		prometheusFilename, err := newMetrics.WritePrometheusFile(reportDir)
+		_, err = newMetrics.WritePrometheusFile(reportDir)
 		if err != nil {
 			return Failure, fmt.Errorf("error while writing prometheus metrics: %v", err)
-		}
-
-		jobName := viper.GetString(config.JobName)
-		if jobName == "" {
-			log.Printf("Skipping metrics upload for local osde2e run.")
-		} else if strings.HasPrefix(jobName, "rehearse-") {
-			log.Printf("Job %s is a rehearsal, so metrics upload is being skipped.", jobName)
-		} else {
-			if err := uploadFileToMetricsBucket(filepath.Join(reportDir, prometheusFilename)); err != nil {
-				return Failure, fmt.Errorf("error while uploading prometheus metrics: %v", err)
-			}
 		}
 	}
 
@@ -1078,16 +1066,6 @@ func checkBeforeMetricsGeneration() error {
 	}
 
 	return nil
-}
-
-// uploadFileToMetricsBucket uploads the given file (with absolute path) to the metrics S3 bucket "incoming" directory.
-func uploadFileToMetricsBucket(filename string) error {
-	data, err := os.ReadFile(filename)
-	if err != nil {
-		return err
-	}
-
-	return aws.WriteToS3(aws.CreateS3URL(viper.GetString(config.Tests.MetricsBucket), "incoming", filepath.Base(filename)), data)
 }
 
 // setupRouteMonitors initializes performance+availability monitoring of cluster routes,

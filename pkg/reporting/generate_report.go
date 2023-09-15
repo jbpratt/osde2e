@@ -3,9 +3,7 @@ package reporting
 import (
 	"fmt"
 	"sort"
-	"strings"
 
-	"github.com/openshift/osde2e/pkg/common/aws"
 	"github.com/openshift/osde2e/pkg/reporting/reporters"
 	"github.com/openshift/osde2e/pkg/reporting/spi"
 	"github.com/openshift/osde2e/pkg/reporting/templates"
@@ -55,20 +53,16 @@ func GenerateReport(reporterName string, reportType string) ([]byte, error) {
 
 // WriteReport will write the raw report to a given output.
 func WriteReport(report []byte, output string) error {
-	if strings.HasPrefix(output, "s3") {
-		aws.WriteToS3(output, report)
-	} else {
-		writer, err := createWriter(output)
-		if err != nil {
-			return fmt.Errorf("error while creating writer: %v", err)
-		}
-		defer writer.Close()
+	writer, err := createWriter(output)
+	if err != nil {
+		return fmt.Errorf("error while creating writer: %v", err)
+	}
+	defer writer.Close()
 
-		_, err = writer.Write(append(report, '\n'))
+	_, err = writer.Write(append(report, '\n'))
 
-		if err != nil {
-			return fmt.Errorf("error while writing report to output: %v", err)
-		}
+	if err != nil {
+		return fmt.Errorf("error while writing report to output: %v", err)
 	}
 
 	return nil
